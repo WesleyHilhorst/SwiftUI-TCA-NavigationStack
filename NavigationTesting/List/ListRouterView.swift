@@ -14,23 +14,18 @@ struct ListRouterView: View {
         NavigationStack(path: $path) {
             
             ListView(model: ListViewModel(router: route))
-                .navigationDestination(for: ListFeatureDestination.self, destination: viewForDestination)
+                .navigationDestination(for: ListFeatureDestination.self, destination: { destination in
+                    
+                    switch destination {
+                    case .detail(let i):
+                        ListView(model: ListViewModel(initialNumber: i, router: route))
+                    }
+                })
         }
     }
     
     func route(destination: ListFeatureDestination) {
         
         path.append(destination)
-    }
-    
-    @ViewBuilder
-    func viewForDestination(destination: ListFeatureDestination) -> some View {
-
-        switch destination {
-        case .detail(let i):
-            
-            ListView(model: ListViewModel(initialNumber: i, router: route))
-                .navigationTitle("Depth \(path.count)")
-        }
     }
 }
