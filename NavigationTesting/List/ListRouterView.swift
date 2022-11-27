@@ -1,5 +1,4 @@
 import SwiftUI
-import ComposableArchitecture
 
 enum ListFeatureDestination: Hashable {
     
@@ -31,17 +30,11 @@ struct ListRouterView: View {
         switch destination {
         case .list:
             
-            ListView(store: Store(
-                initialState: ListViewReducer.State(),
-                reducer: ListViewReducer(router: route)
-            ))
+            ListView(model: ListViewModel(router: route))
         case .detail(let i):
             
-            ListView(store: Store(
-                initialState: ListViewReducer.State(initialNumber: i),
-                reducer: ListViewReducer(router: route)
-            ))
-            .navigationTitle("Depth \(path.count)")
+            ListView(model: ListViewModel(initialNumber: i, router: route))
+                .navigationTitle("Depth \(path.count)")
         }
     }
 }

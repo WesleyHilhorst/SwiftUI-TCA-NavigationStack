@@ -1,65 +1,48 @@
 import SwiftUI
-import ComposableArchitecture
 
-struct ListViewReducer: ReducerProtocol {
+class ListViewModel: ObservableObject {
+    
+    @Published var initialNumber: Int
+    @Published var numbers: [Int]
     
     let router: (ListFeatureDestination) -> ()
     
-    struct State: Equatable {
+    init(
+        initialNumber: Int = 0,
+        numbers: [Int] = [],
+        router: @escaping (ListFeatureDestination) -> Void
+    ) {
         
-        var initialNumber = 0
-        var numbers: [Int] = []
+        self.initialNumber = initialNumber
+        self.numbers = numbers
+        self.router = router
     }
     
-    enum Action {
+    @MainActor
+    func load() async throws {
         
-        case onAppear
-        case onGenerate([Int])
-        case didTapNumber(Int)
+        let clock = ContinuousClock()
+        try await clock.sleep(until: .now.advanced(by: .seconds(1)))
+        return numbers = Array(initialNumber...initialNumber+10)
     }
     
-    func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-        switch action {
-        case .onAppear:
-            
-            return .task { [state] in
-                let clock = ContinuousClock()
-                try await clock.sleep(for: .seconds(1))
-                return .onGenerate(Array(state.initialNumber...state.initialNumber+10))
-            }
-        case let .onGenerate(numbers):
-            
-            print("did generate", numbers)
-            state.numbers = numbers
-            return .none
-        case let .didTapNumber(number):
-            
-            router(.detail(number))
-            return .none
-        }
+    func didTapNumber(_ number: Int) {
+        
+        router(.detail(number))
     }
 }
 
 struct ListView: View {
     
-    let store: StoreOf<ListViewReducer>
-    
-    init(store: StoreOf<ListViewReducer>) {
-        
-        self.store = store
-        print("view init with new store")
-    }
+    @ObservedObject var model: ListViewModel
     
     var body: some View {
         
-        WithViewStore(store) { viewStore in
-         
-            List(viewStore.numbers, id: \.self) { i in
-                Button("\(i)") {
-                    viewStore.send(.didTapNumber(i))
-                }
+        List(model.numbers, id: \.self) { i in
+            Button("\(i)") {
+                model.didTapNumber(i)
             }
-            .onAppear { viewStore.send(.onAppear) }
         }
+        .task { try? await model.load() }
     }
 }
