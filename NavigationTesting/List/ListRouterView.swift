@@ -2,7 +2,6 @@ import SwiftUI
 
 enum ListFeatureDestination: Hashable {
     
-    case list
     case detail(Int)
 }
 
@@ -14,7 +13,7 @@ struct ListRouterView: View {
 
         NavigationStack(path: $path) {
             
-            viewForDestination(destination: .list)
+            ListView(model: ListViewModel(router: route))
                 .navigationDestination(for: ListFeatureDestination.self, destination: viewForDestination)
         }
     }
@@ -28,9 +27,6 @@ struct ListRouterView: View {
     func viewForDestination(destination: ListFeatureDestination) -> some View {
 
         switch destination {
-        case .list:
-            
-            ListView(model: ListViewModel(router: route))
         case .detail(let i):
             
             ListView(model: ListViewModel(initialNumber: i, router: route))
